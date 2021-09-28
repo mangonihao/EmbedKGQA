@@ -110,6 +110,7 @@ def preprocess_entities_relations(entity_dict, relation_dict, entities, relation
     return e,r
 
 def makeGraph(entity2idx):
+    # 构建知识图谱
     f = open('kb.txt', 'r')
     triples = []
     for line in f:
@@ -125,7 +126,7 @@ def makeGraph(entity2idx):
         G.add_edge(e1, e2)
     return G
 
-def getBest(scores, candidates):
+def getBest(scores, candidates):  # 选出得分最高的候选答案
     cand_scores_dict = {}
     highest = 0
     highest_key = ''
@@ -136,7 +137,7 @@ def getBest(scores, candidates):
     return highest_key
     
 
-def getNeighbourhood(graph, entity, radius=1):
+def getNeighbourhood(graph, entity, radius=1):  # 使用KG的操作找出邻居
     g = nx.ego_graph(graph, entity, radius, center=False)
     nodes = list(g.nodes)
     return nodes
@@ -151,7 +152,7 @@ def getMask(candidates, entity2idx):
         x[entity2idx[c]] = 0
     return x
 
-def inTopk(scores, ans, k):
+def inTopk(scores, ans, k): # 选择topK
     result = False
     topk = torch.topk(scores, k)[1]
     for x in topk:
@@ -306,7 +307,7 @@ def train(data_path, neg_batch_size, batch_size, shuffle, num_workers, nb_epochs
     print('Loaded entities and relations')
 
     entity2idx, idx2entity, embedding_matrix = prepare_embeddings(e)
-    data = process_text_file(data_path, split=False)
+    data = process_text_file(data_path, split=False)  # 处理问题
     print('Train file processed, making dataloader')
     # word2ix,idx2word, max_len = get_vocab(data)
     # hops = str(num_hops)
@@ -314,6 +315,7 @@ def train(data_path, neg_batch_size, batch_size, shuffle, num_workers, nb_epochs
     dataset = DatasetMetaQA(data, e, entity2idx)
     data_loader = DataLoader(dataset, batch_size=batch_size, shuffle=True, num_workers=num_workers)
     print('Creating model...')
+    # ?
     model = RelationExtractor(embedding_dim=embedding_dim, num_entities = len(idx2entity), relation_dim=relation_dim, pretrained_embeddings=embedding_matrix, freeze=freeze, device=device, entdrop = entdrop, reldrop = reldrop, scoredrop = scoredrop, l3_reg = l3_reg, model = model_name, ls = ls, do_batch_norm=do_batch_norm)
     print('Model created!')
     if load_from != '':

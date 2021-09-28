@@ -1,3 +1,4 @@
+.idea/
 data/*
 pretrained_models/*
 checkpoints/*

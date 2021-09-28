@@ -1,4 +1,10 @@
+import sys
 import os
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.dirname(os.path.dirname(__file__))))  # 获取上级目录、
+#sys.path.append(os.path.abspath(os.path.dirname(os.getcwd())))
+# sys.path.append('/sdb/xmh/Projects/Pytorch/BERT_FP/')
 import torch
 import numpy as np
 from torch.utils.data import Dataset, DataLoader
@@ -53,6 +59,7 @@ args = parser.parse_args()
 
 
 def prepare_embeddings(embedding_dict):
+    # 提取词向量
     entity2idx = {}
     idx2entity = {}
     i = 0
@@ -82,6 +89,9 @@ def get_vocab(data):
     return word_to_ix, idx2word, maxLength
 
 def preprocess_entities_relations(entity_dict, relation_dict, entities, relations):
+    '''
+    实体关系字典
+    '''
     e = {}
     r = {}
 
@@ -286,13 +296,13 @@ def data_generator(data, word2ix, entity2idx):
 hops = args.hops
 if hops in ['1', '2', '3']:
     hops = hops + 'hop'
-if args.kg_type == 'half':
+if args.kg_type == 'half':  # 取不完整数据集
     data_path = '../../data/QA_data/MetaQA/qa_train_' + hops + '_half.txt'
 else:
     data_path = '../../data/QA_data/MetaQA/qa_train_' + hops + '.txt'
 print('Train file is ', data_path)
 
-hops_without_old = hops.replace('_old', '')
+hops_without_old = hops.replace('_old', '')  # ？
 valid_data_path = '../../data/QA_data/MetaQA/qa_dev_' + hops_without_old + '.txt'
 test_data_path = '../../data/QA_data/MetaQA/qa_test_' + hops_without_old + '.txt'
 

@@ -6,7 +6,7 @@ from torch.autograd import Variable
 import torch.nn.functional as F
 import numpy as np
 from torch.nn.init import xavier_normal_
-from transformers import *
+# from transformers import *
 import random
 
 class RelationExtractor(nn.Module):

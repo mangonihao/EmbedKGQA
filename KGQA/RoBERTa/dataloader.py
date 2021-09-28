@@ -9,7 +9,7 @@ import time
 from collections import defaultdict
 from tqdm import tqdm
 import numpy as np
-from transformers import *
+# from transformers import *
 
 
 class DatasetMetaQA(Dataset):

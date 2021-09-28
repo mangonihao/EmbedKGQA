@@ -1,7 +1,5 @@
 import sys
 import os
-import sys
-import os
 sys.path.append(os.path.abspath(os.path.dirname(os.path.dirname(__file__))))  # 获取上级目录、
 #sys.path.append(os.path.abspath(os.path.dirname(os.getcwd())))
 # sys.path.append('/sdb/xmh/Projects/Pytorch/BERT_FP/')
@@ -17,6 +15,8 @@ from dataloader import DatasetMetaQA, DataLoaderMetaQA
 from model import RelationExtractor
 from torch.optim.lr_scheduler import ExponentialLR
 
+torch.manual_seed(0)  # 设置CPU的随机数种子
+torch.cuda.manual_seed_all(0)  # 设置所有GPU的随机数种子
 
 def str2bool(v):
     if isinstance(v, bool):
@@ -54,7 +54,8 @@ parser.add_argument('--use_cuda', type=bool, default=True)
 parser.add_argument('--patience', type=int, default=5)
 parser.add_argument('--freeze', type=str2bool, default=True)
 
-os.environ["CUDA_VISIBLE_DEVICES"]="0,1,2,3,4,5,6,7"
+os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"  # 设备ID=物理ID
+os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,2,3"
 args = parser.parse_args()
 
 
@@ -180,6 +181,7 @@ def train(data_path, entity_path, relation_path, entity_dict, relation_dict, neg
     dataset = DatasetMetaQA(data=data, word2ix=word2ix, relations=r, entities=e, entity2idx=entity2idx)
     data_loader = DataLoaderMetaQA(dataset, batch_size=batch_size, shuffle=True, num_workers=num_workers)
     model = RelationExtractor(embedding_dim=embedding_dim, hidden_dim=hidden_dim, vocab_size=len(word2ix), num_entities = len(idx2entity), relation_dim=relation_dim, pretrained_embeddings=embedding_matrix, freeze=freeze, device=device, entdrop = entdrop, reldrop = reldrop, scoredrop = scoredrop, l3_reg = l3_reg, model = model_name, ls = ls, w_matrix = w_matrix, bn_list=bn_list)
+
     model.to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
     scheduler = ExponentialLR(optimizer, decay)
@@ -232,8 +234,8 @@ def train(data_path, entity_path, relation_path, entity_dict, relation_dict, neg
                     suffix = ''
                     if freeze == True:
                         suffix = '_frozen'
-                    checkpoint_path = '../../checkpoints/MetaQA/'
-                    checkpoint_file_name = checkpoint_path +model_name+ '_' + num_hops + suffix + ".pt"
+                    checkpoint_path = path_home + 'checkpoints/MetaQA/'
+                    checkpoint_file_name = checkpoint_path + model_name+ '_' + num_hops + suffix + ".pt"
                     print('Saving checkpoint to ', checkpoint_file_name)
                     torch.save(model.state_dict(), checkpoint_file_name)
                 elif (score < best_score + eps) and (no_update < patience):
@@ -291,31 +293,30 @@ def data_generator(data, word2ix, entity2idx):
         yield torch.tensor(head, dtype=torch.long),torch.tensor(encoded_question, dtype=torch.long) , ans, torch.tensor(len(encoded_question), dtype=torch.long), data_sample[1]
 
 
-
-
+path_home = '/sdb/xmh/Projects/Pytorch/EmbedKGQA/'  # ../..
 hops = args.hops
 if hops in ['1', '2', '3']:
     hops = hops + 'hop'
 if args.kg_type == 'half':  # 取不完整数据集
-    data_path = '../../data/QA_data/MetaQA/qa_train_' + hops + '_half.txt'
+    data_path = path_home + 'data/QA_data/MetaQA/qa_train_' + hops + '_half.txt'
 else:
-    data_path = '../../data/QA_data/MetaQA/qa_train_' + hops + '.txt'
+    data_path = path_home + 'data/QA_data/MetaQA/qa_train_' + hops + '.txt'
 print('Train file is ', data_path)
 
 hops_without_old = hops.replace('_old', '')  # ？
-valid_data_path = '../../data/QA_data/MetaQA/qa_dev_' + hops_without_old + '.txt'
-test_data_path = '../../data/QA_data/MetaQA/qa_test_' + hops_without_old + '.txt'
+valid_data_path = path_home + 'data/QA_data/MetaQA/qa_dev_' + hops_without_old + '.txt'
+test_data_path = path_home + 'data/QA_data/MetaQA/qa_test_' + hops_without_old + '.txt'
 
 model_name = args.model
 kg_type = args.kg_type
 print('KG type is', kg_type)
-embedding_folder = '../../pretrained_models/embeddings/' + model_name + '_MetaQA_' + kg_type
+embedding_folder = path_home + 'pretrained_models/embeddings/' + model_name + '_MetaQA_' + kg_type
 
 entity_embedding_path = embedding_folder + '/E.npy'
 relation_embedding_path = embedding_folder + '/R.npy'
 entity_dict = embedding_folder + '/entities.dict'
 relation_dict = embedding_folder + '/relations.dict'
-w_matrix =  embedding_folder + '/W.npy'
+w_matrix = embedding_folder + '/W.npy'
 
 bn_list = []
 
@@ -363,7 +364,7 @@ elif args.mode == 'eval':
     relation_path=relation_embedding_path, 
     entity_dict=entity_dict, 
     relation_dict=relation_dict,
-    model_path='../../checkpoints/MetaQA/best_score_model.pt',
+    model_path= path_home+'checkpoints/MetaQA/best_score_model.pt',
     train_data=data_path,
     gpu=args.gpu,
     hidden_dim=args.hidden_dim,

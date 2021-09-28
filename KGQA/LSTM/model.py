@@ -250,6 +250,7 @@ class RelationExtractor(nn.Module):
     
     def forward(self, sentence, p_head, p_tail, question_len):
         embeds = self.word_embeddings(sentence)
+        question_len = question_len.cpu()  # 因为pack_padded_sequence无法处理长度为cuda变量的情况
         packed_output = pack_padded_sequence(embeds, question_len, batch_first=True)
         outputs, (hidden, cell_state) = self.GRU(packed_output)
         outputs, outputs_length = pad_packed_sequence(outputs, batch_first=True)

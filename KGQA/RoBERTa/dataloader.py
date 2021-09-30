@@ -22,7 +22,7 @@ class DatasetMetaQA(Dataset):
         self.index_array = list(self.entities.keys())
         self.tokenizer_class = RobertaTokenizer
         self.pretrained_weights = 'roberta-base'  # 没有设置本地路径导致请求网络，而服务器没网，所以一直卡住
-        self.tokenizer = self.tokenizer_class.from_pretrained(self.pretrained_weights)
+        self.tokenizer = self.tokenizer_class.from_pretrained('/sdb/xmh/Projects/Pytorch/EmbedKGQA/roberta-base')
 
     def __len__(self):
         return len(self.data)

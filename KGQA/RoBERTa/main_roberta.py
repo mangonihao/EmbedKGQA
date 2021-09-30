@@ -1,4 +1,6 @@
+import sys
 import os
+sys.path.append(os.path.abspath(os.path.dirname(os.path.dirname(__file__))))  # 获取上级目录
 import torch
 import numpy as np
 from torch.utils.data import Dataset, DataLoader
@@ -17,6 +19,10 @@ import sys
 sys.path.append("../..") # Adds higher directory to python modules path.
 from kge.model import KgeModel
 from kge.util.io import load_checkpoint
+
+import setproctitle
+setproctitle.setproctitle("KBQA")  # 设置进程的名称
+
 
 def str2bool(v):
     if isinstance(v, bool):
@@ -44,7 +50,7 @@ parser.add_argument('--scoredrop', type=float, default=0.0)
 parser.add_argument('--l3_reg', type=float, default=0.0)
 parser.add_argument('--decay', type=float, default=1.0)
 parser.add_argument('--shuffle_data', type=bool, default=True)
-parser.add_argument('--num_workers', type=int, default=15)
+parser.add_argument('--num_workers', type=int, default=1024)
 parser.add_argument('--lr', type=float, default=0.0001)
 parser.add_argument('--nb_epochs', type=int, default=90)
 parser.add_argument('--gpu', type=int, default=0)
@@ -57,7 +63,8 @@ parser.add_argument('--patience', type=int, default=5)
 parser.add_argument('--freeze', type=str2bool, default=True)
 parser.add_argument('--do_batch_norm', type=str2bool, default=True)
 
-os.environ["CUDA_VISIBLE_DEVICES"]="0,1,2,3,4,5,6,7"
+os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"  # 设备ID=物理ID
+os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,2,3"
 args = parser.parse_args()
 
 
@@ -278,9 +285,9 @@ def set_bn_eval(m):
 
 def getEntityEmbeddings(kge_model, hops):
     e = {}
-    entity_dict = '../../pretrained_models/embeddings/ComplEx_fbwq_full/entity_ids.del'
+    entity_dict = path_home + 'pretrained_models/embeddings/ComplEx_fbwq_full/entity_ids.del'
     if 'half' in hops:
-        entity_dict = '../../pretrained_models/embeddings/ComplEx_fbwq_half/entity_ids.del'
+        entity_dict = path_home + 'pretrained_models/embeddings/ComplEx_fbwq_half/entity_ids.del'
         print('Loading half entity_ids.del')
     embedder = kge_model._entity_embedder
     f = open(entity_dict, 'r')
@@ -297,7 +304,7 @@ def train(data_path, neg_batch_size, batch_size, shuffle, num_workers, nb_epochs
     kg_type = 'full'
     if 'half' in hops:
         kg_type = 'half'
-    checkpoint_file = '../../pretrained_models/embeddings/ComplEx_fbwq_' + kg_type + '/checkpoint_best.pt'
+    checkpoint_file = path_home + 'pretrained_models/embeddings/ComplEx_fbwq_' + kg_type + '/checkpoint_best.pt'
     print('Loading kg embeddings from', checkpoint_file)
     kge_checkpoint = load_checkpoint(checkpoint_file)
     kge_model = KgeModel.create_from(kge_checkpoint)
@@ -312,7 +319,9 @@ def train(data_path, neg_batch_size, batch_size, shuffle, num_workers, nb_epochs
     # word2ix,idx2word, max_len = get_vocab(data)
     # hops = str(num_hops)
     device = torch.device(gpu if use_cuda else "cpu")
+    print("Loaded device")
     dataset = DatasetMetaQA(data, e, entity2idx)
+    print("make DatasetMetaQA")
     data_loader = DataLoader(dataset, batch_size=batch_size, shuffle=True, num_workers=num_workers)
     print('Creating model...')
     # ?
@@ -497,11 +506,12 @@ def data_generator(data, dataloader, entity2idx):
 hops = args.hops
 
 model_name = args.model
+path_home = '/sdb/xmh/Projects/Pytorch/EmbedKGQA/'
 
 if 'webqsp' in hops:
-    data_path = '../../data/QA_data/WebQuestionsSP/qa_train_webqsp.txt'
-    valid_data_path = '../../data/QA_data/WebQuestionsSP/qa_test_webqsp_fixed.txt'
-    test_data_path = '../../data/QA_data/WebQuestionsSP/qa_test_webqsp_fixed.txt'
+    data_path = path_home + 'data/QA_data/WebQuestionsSP/qa_train_webqsp.txt'
+    valid_data_path = path_home + 'data/QA_data/WebQuestionsSP/qa_test_webqsp_fixed.txt'
+    test_data_path = path_home + 'data/QA_data/WebQuestionsSP/qa_test_webqsp_fixed.txt'
 
 
 if args.mode == 'train':

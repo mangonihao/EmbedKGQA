@@ -39,8 +39,8 @@ class DatasetMetaQA(Dataset):
     def __getitem__(self, index):
         data_point = self.data[index]
         question_text = data_point[1]
-        question_ids = [self.word_to_ix[word] for word in question_text.split()]
-        head_id = self.entity2idx[data_point[0].strip()]
+        question_ids = [self.word_to_ix[word] for word in question_text.split()]  # 问题使用语句的字词典
+        head_id = self.entity2idx[data_point[0].strip()]  # 实体使用实体字典
         tail_ids = []
         for tail_name in data_point[2]:
             tail_name = tail_name.strip()

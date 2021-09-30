@@ -75,7 +75,7 @@ class RelationExtractor(nn.Module):
         self.mid1 = 256
         self.mid2 = 256
 
-        self.lin1 = nn.Linear(hidden_dim * 2, self.mid1, bias=False)
+        self.lin1 = nn.Linear(hidden_dim * 2, self.mid1, bias=False)  #
         self.lin2 = nn.Linear(self.mid1, self.mid2, bias=False)
         xavier_normal_(self.lin1.weight.data)
         xavier_normal_(self.lin2.weight.data)
@@ -186,6 +186,7 @@ class RelationExtractor(nn.Module):
         re_relation, im_relation = torch.chunk(relation, 2, dim=1)
         re_tail, im_tail = torch.chunk(self.embedding.weight, 2, dim =1)
 
+        # 不知道为什么是这个表达式，复数乘法究竟怎么推导出这个
         re_score = re_head * re_relation - im_head * im_relation
         im_score = re_head * im_relation + im_head * re_relation
 
@@ -259,7 +260,7 @@ class RelationExtractor(nn.Module):
         # rel_embedding = self.hidden2rel(outputs)
         rel_embedding = self.applyNonLinear(outputs)
         p_head = self.embedding(p_head)
-        pred = self.getScores(p_head, rel_embedding)
+        pred = self.getScores(p_head, rel_embedding)  # 通过ComplEx的打分函数，对embed的所有候选实体进行打分
         actual = p_tail
         if self.label_smoothing:
             actual = ((1.0-self.label_smoothing)*actual) + (1.0/actual.size(1)) 

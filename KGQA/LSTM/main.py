@@ -1,6 +1,6 @@
 import sys
 import os
-sys.path.append(os.path.abspath(os.path.dirname(os.path.dirname(__file__))))  # 获取上级目录、
+sys.path.append(os.path.abspath(os.path.dirname(os.path.dirname(__file__))))  # 获取上级目录
 #sys.path.append(os.path.abspath(os.path.dirname(os.getcwd())))
 # sys.path.append('/sdb/xmh/Projects/Pytorch/BERT_FP/')
 import torch
@@ -11,8 +11,8 @@ import pickle
 from tqdm import tqdm
 import argparse
 from torch.nn import functional as F
-from dataloader import DatasetMetaQA, DataLoaderMetaQA
-from model import RelationExtractor
+from .dataloader import DatasetMetaQA, DataLoaderMetaQA
+from .model import RelationExtractor
 from torch.optim.lr_scheduler import ExponentialLR
 
 torch.manual_seed(0)  # 设置CPU的随机数种子
@@ -77,15 +77,15 @@ def get_vocab(data):
     maxLength = 0
     idx2word = {}
     for d in data:
-            sent = d[1]
-            for word in sent.split():
-                if word not in word_to_ix:
-                    idx2word[len(word_to_ix)] = word
-                    word_to_ix[word] = len(word_to_ix)
-                    
-            length = len(sent.split())
-            if length > maxLength:
-                maxLength = length
+        sent = d[1]
+        for word in sent.split():
+            if word not in word_to_ix:
+                idx2word[len(word_to_ix)] = word
+                word_to_ix[word] = len(word_to_ix)
+
+        length = len(sent.split())
+        if length > maxLength:
+            maxLength = length
 
     return word_to_ix, idx2word, maxLength
 
@@ -168,16 +168,22 @@ def set_bn_eval(m):
 def train(data_path, entity_path, relation_path, entity_dict, relation_dict, neg_batch_size, batch_size, shuffle, num_workers, nb_epochs, embedding_dim, hidden_dim, relation_dim, gpu, use_cuda,patience, freeze, validate_every, num_hops, lr, entdrop, reldrop, scoredrop, l3_reg, model_name, decay, ls, w_matrix, bn_list, valid_data_path=None):
     entities = np.load(entity_path)
     relations = np.load(relation_path)
+
+    # 做成词向量词典，字：词向量
     e,r = preprocess_entities_relations(entity_dict, relation_dict, entities, relations)
+    # 通过词典做成词向量
     entity2idx, idx2entity, embedding_matrix = prepare_embeddings(e)
+    # 处理训练数据，获取 中心实体 问句 答案
     data = process_text_file(data_path, split=False)
     # data = pickle.load(open(data_path, 'rb'))
-    word2ix,idx2word, max_len = get_vocab(data)
+    word2ix,idx2word, max_len = get_vocab(data)  # 从训练语句中获取词典
     hops = str(num_hops)
     # print(idx2word)
     # aditay
     # print(idx2word.keys())
     device = torch.device(gpu if use_cuda else "cpu")
+
+    #问句使用从语料中生成的字典，实体和答案使用词典
     dataset = DatasetMetaQA(data=data, word2ix=word2ix, relations=r, entities=e, entity2idx=entity2idx)
     data_loader = DataLoaderMetaQA(dataset, batch_size=batch_size, shuffle=True, num_workers=num_workers)
     model = RelationExtractor(embedding_dim=embedding_dim, hidden_dim=hidden_dim, vocab_size=len(word2ix), num_entities = len(idx2entity), relation_dim=relation_dim, pretrained_embeddings=embedding_matrix, freeze=freeze, device=device, entdrop = entdrop, reldrop = reldrop, scoredrop = scoredrop, l3_reg = l3_reg, model = model_name, ls = ls, w_matrix = w_matrix, bn_list=bn_list)
@@ -252,6 +258,8 @@ def train(data_path, entity_path, relation_path, entity_dict, relation_dict, neg
                     
 
 def process_text_file(text_file, split=False):
+    #一条数据 what does jamaican people speak [m.03_r3]	m.01428y|m.04ygk0|m.01428y
+    # 分离出 中心实体 问题 答案
     data_file = open(text_file, 'r')
     data_array = []
     for data_line in data_file.readlines():
@@ -260,12 +268,12 @@ def process_text_file(text_file, split=False):
             continue
         data_line = data_line.strip().split('\t')
         question = data_line[0].split('[')
-        question_1 = question[0]
+        question_1 = question[0]  # what does jamaican people speak
         question_2 = question[1].split(']')
-        head = question_2[0].strip()
-        question_2 = question_2[1]
-        question = question_1+'NE'+question_2
-        ans = data_line[1].split('|')
+        head = question_2[0].strip()  # m.03_r3  中心主体
+        question_2 = question_2[1]  # 有可能中心实体出现在问句中间，问句会被分解为两个
+        question = question_1+'NE'+question_2  # NE表示中间实体
+        ans = data_line[1].split('|')  # m.01428y m.04ygk0 m.01428y
         data_array.append([head, question.strip(), ans])
     if split==False:
         return data_array
@@ -314,13 +322,13 @@ embedding_folder = path_home + 'pretrained_models/embeddings/' + model_name + '_
 
 entity_embedding_path = embedding_folder + '/E.npy'
 relation_embedding_path = embedding_folder + '/R.npy'
-entity_dict = embedding_folder + '/entities.dict'
+entity_dict = embedding_folder + '/entities.dict'  # 与原始数据内容和格式是一致的
 relation_dict = embedding_folder + '/relations.dict'
 w_matrix = embedding_folder + '/W.npy'
 
 bn_list = []
 
-for i in range(3):
+for i in range(3):  # batch_norm的预训练权重
     bn = np.load(embedding_folder + '/bn' + str(i) + '.npy', allow_pickle=True)
     bn_list.append(bn.item())
 

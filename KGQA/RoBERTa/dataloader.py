@@ -9,7 +9,7 @@ import time
 from collections import defaultdict
 from tqdm import tqdm
 import numpy as np
-# from transformers import *
+from transformers import RobertaTokenizer
 
 
 class DatasetMetaQA(Dataset):
@@ -21,7 +21,7 @@ class DatasetMetaQA(Dataset):
         self.neg_dict = defaultdict(list)
         self.index_array = list(self.entities.keys())
         self.tokenizer_class = RobertaTokenizer
-        self.pretrained_weights = 'roberta-base'
+        self.pretrained_weights = 'roberta-base'  # 没有设置本地路径导致请求网络，而服务器没网，所以一直卡住
         self.tokenizer = self.tokenizer_class.from_pretrained(self.pretrained_weights)
 
     def __len__(self):
@@ -71,16 +71,16 @@ class DatasetMetaQA(Dataset):
                 attention_mask.append(1)
         return question_tokenized, torch.tensor(attention_mask, dtype=torch.long)
 
-# def _collate_fn(batch):
-#     print(len(batch))
-#     exit(0)
-#     question_tokenized = batch[0]
-#     attention_mask = batch[1]
-#     head_id = batch[2]
-#     tail_onehot = batch[3]
-#     question_tokenized = torch.stack(question_tokenized, dim=0)
-#     attention_mask = torch.stack(attention_mask, dim=0)
-#     return question_tokenized, attention_mask, head_id, tail_onehot 
+def _collate_fn(batch):
+    print(len(batch))
+    exit(0)
+    question_tokenized = batch[0]
+    attention_mask = batch[1]
+    head_id = batch[2]
+    tail_onehot = batch[3]
+    question_tokenized = torch.stack(question_tokenized, dim=0)
+    attention_mask = torch.stack(attention_mask, dim=0)
+    return question_tokenized, attention_mask, head_id, tail_onehot
 
 class DataLoaderMetaQA(DataLoader):
     def __init__(self, *args, **kwargs):

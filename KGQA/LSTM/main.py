@@ -11,8 +11,8 @@ import pickle
 from tqdm import tqdm
 import argparse
 from torch.nn import functional as F
-from .dataloader import DatasetMetaQA, DataLoaderMetaQA
-from .model import RelationExtractor
+from dataloader import DatasetMetaQA, DataLoaderMetaQA
+from model import RelationExtractor
 from torch.optim.lr_scheduler import ExponentialLR
 
 torch.manual_seed(0)  # 设置CPU的随机数种子

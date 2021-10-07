@@ -230,7 +230,7 @@ class RelationExtractor(nn.Module):
         question_embedding = self.getQuestionEmbedding(question_tokenized, attention_mask)
         rel_embedding = self.applyNonLinear(question_embedding)
         p_head = self.embedding(p_head)
-        pred = self.getScores(p_head, rel_embedding)
+        pred = self.getScores(p_head, rel_embedding)  # 通过ComplEx进行链接预测
         actual = p_tail
         if self.label_smoothing:
             actual = ((1.0-self.label_smoothing)*actual) + (1.0/actual.size(1)) 

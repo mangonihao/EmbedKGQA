@@ -254,8 +254,8 @@ class RelationExtractor(nn.Module):
         question_len = question_len.cpu()  # 因为pack_padded_sequence无法处理长度为cuda变量的情况
         packed_output = pack_padded_sequence(embeds, question_len, batch_first=True)
         outputs, (hidden, cell_state) = self.GRU(packed_output)
-        outputs, outputs_length = pad_packed_sequence(outputs, batch_first=True)
-        outputs = torch.cat([hidden[0,:,:], hidden[1,:,:]], dim=-1)
+        # outputs, outputs_length = pad_packed_sequence(outputs, batch_first=True)
+        outputs = torch.cat([hidden[0,:,:], hidden[1,:,:]], dim=-1)  # 论文取的是最后的隐状态(Roberta)
         # outputs = self.drop1(outputs)
         # rel_embedding = self.hidden2rel(outputs)
         rel_embedding = self.applyNonLinear(outputs)

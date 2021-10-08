@@ -134,6 +134,8 @@ class TrainingJob(Job):
             raise ValueError("train.type")
 
     def _run(self) -> None:
+        print("haha")
+        print(self.config.get("train.max_epochs"))
         """Start/resume the training job and run to completion."""
         self.config.log("Starting training...")
         checkpoint_every = self.config.get("train.checkpoint.every")
@@ -319,7 +321,7 @@ class TrainingJob(Job):
 
             # determine penalty terms (forward pass)
             batch_forward_time = batch_result.forward_time - time.time()
-            penalties_torch = self.model.penalty(
+            penalties_torch = self.model.module.penalty(  # 添加module
                 epoch=self.epoch,
                 batch_index=batch_index,
                 num_batches=len(self.loader),
@@ -471,7 +473,7 @@ class TrainingJob(Job):
 
         """
         super()._prepare()
-        self.model.prepare_job(self)  # let the model add some hooks
+        self.model.module.prepare_job(self)  # let the model add some hooks  # 添加了module
 
     @dataclass
     class _ProcessBatchResult:

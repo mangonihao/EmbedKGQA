@@ -4,6 +4,7 @@ from collections import OrderedDict
 
 from torch import Tensor
 import torch.nn
+import torch.nn as nn  # 我添加的
 import numpy as np
 import os
 
@@ -483,6 +484,7 @@ class KgeModel(KgeBase):
                 configuration_key=configuration_key,
                 init_for_load_only=init_for_load_only,
             )
+            model = nn.DataParallel(model)  # 我添加的
             model.to(config.get("job.device"))
             return model
         except ImportError:

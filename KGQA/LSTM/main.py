@@ -15,8 +15,12 @@ from dataloader import DatasetMetaQA, DataLoaderMetaQA
 from model import RelationExtractor
 from torch.optim.lr_scheduler import ExponentialLR
 
+import setproctitle
+setproctitle.setproctitle("KBQA_LSTM")  # 设置进程的名称
+
 torch.manual_seed(0)  # 设置CPU的随机数种子
 torch.cuda.manual_seed_all(0)  # 设置所有GPU的随机数种子
+
 
 def str2bool(v):
     if isinstance(v, bool):

@@ -21,7 +21,7 @@ from kge.model import KgeModel
 from kge.util.io import load_checkpoint
 
 import setproctitle
-setproctitle.setproctitle("KBQA")  # 设置进程的名称
+setproctitle.setproctitle("KBQA_R")  # 设置进程的名称
 
 
 def str2bool(v):

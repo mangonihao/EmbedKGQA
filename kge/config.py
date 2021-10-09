@@ -154,6 +154,10 @@ class Config:
         into the configuration.
 
         """
+        if key == 'console.quiet' or 'random_seed' in key or 'modules' in key or 'train' in key or '1vsAll' in key\
+                or 'KvsAll' in key or 'negative_sampling' in key or 'valid' in key or 'entity_ranking' in key or 'manual_search' in key\
+                or 'grid_search' in key or 'ax_search' in key:
+            return
         from kge.misc import is_number
 
         splits = key.split(".")

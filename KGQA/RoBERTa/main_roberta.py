@@ -304,7 +304,8 @@ def train(data_path, neg_batch_size, batch_size, shuffle, num_workers, nb_epochs
     kg_type = 'full'
     if 'half' in hops:
         kg_type = 'half'
-    checkpoint_file = path_home + 'pretrained_models/embeddings/ComplEx_fbwq_' + kg_type + '/checkpoint_best.pt'
+    # checkpoint_file = path_home + 'pretrained_models/embeddings/ComplEx_fbwq_' + kg_type + '/checkpoint_best.pt'
+    checkpoint_file = path_home + 'pretrained_models/embeddings/ComplEx_fbwq_' + kg_type + '/checkpoint_00000.pt'
     print('Loading kg embeddings from', checkpoint_file)
     kge_checkpoint = load_checkpoint(checkpoint_file)
     kge_model = KgeModel.create_from(kge_checkpoint)
@@ -412,7 +413,8 @@ def eval(data_path,
     kg_type = 'full'
     if 'half' in hops:
         kg_type = 'half'
-    checkpoint_file = '../../pretrained_models/embeddings/ComplEx_fbwq_' + kg_type + '/checkpoint_best.pt'
+    # checkpoint_file = '../../pretrained_models/embeddings/ComplEx_fbwq_' + kg_type + '/checkpoint_best.pt'
+    checkpoint_file = '../../pretrained_models/embeddings/ComplEx_fbwq_' + kg_type + '/checkpoint_00000.pt'
     print('Loading kg embeddings from', checkpoint_file)
     kge_checkpoint = load_checkpoint(checkpoint_file)
     kge_model = KgeModel.create_from(kge_checkpoint)

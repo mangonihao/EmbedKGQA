@@ -75,8 +75,12 @@ class RelationExtractor(nn.Module):
         self.mid1 = 256
         self.mid2 = 256
 
-        self.lin1 = nn.Linear(hidden_dim * 2, self.mid1, bias=False)  #
-        self.lin2 = nn.Linear(self.mid1, self.mid2, bias=False)
+        # self.lin1 = nn.Linear(hidden_dim * 2, self.mid1, bias=False)  #
+        # self.lin2 = nn.Linear(self.mid1, self.mid2, bias=False)
+
+        self.lin1 = nn.Linear(hidden_dim * 2, self.relation_dim, bias=False)  #
+        self.lin2 = nn.Linear(self.relation_dim, self.relation_dim, bias=False)
+
         xavier_normal_(self.lin1.weight.data)
         xavier_normal_(self.lin2.weight.data)
         self.hidden2rel = nn.Linear(self.mid2, self.relation_dim)
@@ -108,13 +112,20 @@ class RelationExtractor(nn.Module):
         self.GRU = nn.LSTM(embedding_dim, self.hidden_dim, self.n_layers, bidirectional=self.bidirectional, batch_first=True)
         
 
-    def applyNonLinear(self, outputs):
+    # def applyNonLinear(self, outputs):
+    #     outputs = self.lin1(outputs)
+    #     outputs = F.relu(outputs)
+    #     outputs = self.lin2(outputs)
+    #     outputs = F.relu(outputs)
+    #     outputs = self.hidden2rel(outputs)
+    #     # outputs = self.hidden2rel_base(outputs)
+    #     return outputs
+
+    def applyNonLinear(self, outputs):  # 实验
         outputs = self.lin1(outputs)
-        outputs = F.relu(outputs)
+        outputs = F.tanh(outputs)
         outputs = self.lin2(outputs)
-        outputs = F.relu(outputs)
-        outputs = self.hidden2rel(outputs)
-        # outputs = self.hidden2rel_base(outputs)
+        outputs = F.tanh(outputs)
         return outputs
 
     def TuckER(self, head, relation):
@@ -259,6 +270,7 @@ class RelationExtractor(nn.Module):
         # outputs = self.drop1(outputs)
         # rel_embedding = self.hidden2rel(outputs)
         rel_embedding = self.applyNonLinear(outputs)
+
         p_head = self.embedding(p_head)
         pred = self.getScores(p_head, rel_embedding)  # 通过ComplEx的打分函数，对embed的所有候选实体进行打分
         actual = p_tail
